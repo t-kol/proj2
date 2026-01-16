@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfield</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        .main-container {
+            position: relative;
+            width: 65vw;
+            height: 65vh;
+            max-width: 950px;
+            max-height: 700px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen-border {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid #00ffff;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.1);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 11px;
+            z-index: 1;
+        }
+
+        .title {
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3.5rem;
+            color: #fff;
+            text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #0099ff;
+            font-weight: bold;
+            letter-spacing: 3px;
+            z-index: 10;
+            pointer-events: none;
+            animation: titlePulse 3s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% {
+                opacity: 1;
+                text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #0099ff;
+            }
+            50% {
+                opacity: 0.7;
+                text-shadow: 0 0 30px #00ffff, 0 0 60px #00ffff, 0 0 80px #0099ff;
+            }
+        }
+
+        .control-panel {
+            position: absolute;
+            left: -220px;
+            top: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            width: 200px;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .control-panel h3 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+        }
+
+        .slider-group label {
+            display: block;
+            color: #00ffff;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-group label span:last-child {
+            font-weight: bold;
+            color: #ffff00;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00ffff;
+            cursor: pointer;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00ffff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        .info {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ffff;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            white-space: nowrap;
+        }
+
+        /* Scrollbar styling for control panel */
+        .control-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .control-panel::-webkit-scrollbar-track {
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb {
+            background: #00ffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="control-panel">
+            <h3>Controls</h3>
+            
+            <div class="slider-group">
+                <label>Trail Length <span id="trailValue">100</span></label>
+                <input type="range" id="trailSlider" min="10" max="200" value="100">
+            </div>
+
+            <div class="slider-group">
+                <label>Star Speed <span id="speedValue">10</span></label>
+                <input type="range" id="speedSlider" min="1" max="25" value="10">
+            </div>
+
+            <div class="slider-group">
+                <label>Star Count <span id="countValue">500</span></label>
+                <input type="range" id="countSlider" min="50" max="1000" value="500" step="50">
+            </div>
+
+            <div class="slider-group">
+                <label>Spawn Radius <span id="spawnValue">100</span></label>
+                <input type="range" id="spawnSlider" min="10" max="200" value="100">
+            </div>
+        </div>
+
+        <canvas id="starfield"></canvas>
+        <div class="screen-border"></div>
+        <div class="title">STARFIELD</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Settings
+        let settings = {
+            trailLength: 100,
+            speed: 10,
+            starColor: '#ffffff',
+            starCount: 500,
+            spawnRadius: 100
+        };
+
+        // Star object
+        class Star {
+            constructor(color, speed, spawnRadius) {
+                this.x = (Math.random() - 0.5) * spawnRadius;
+                this.y = (Math.random() - 0.5) * spawnRadius;
+                this.z = Math.random() * canvas.width;
+                this.speed = speed;
+                this.size = Math.random() * 2 + 0.5;
+                this.color = color;
+            }
+
+            update(speed) {
+                this.z -= speed;
+                if (this.z <= 0) {
+                    this.reset(speed);
+                }
+            }
+
+            reset(speed) {
+                this.x = (Math.random() - 0.5) * settings.spawnRadius;
+                this.y = (Math.random() - 0.5) * settings.spawnRadius;
+                this.z = canvas.width;
+                this.speed = speed;
+                this.size = Math.random() * 2 + 0.5;
+            }
+
+            display(trailLength) {
+                // Perspective projection
+                const scale = canvas.width / this.z;
+                const x = this.x * scale + canvas.width / 2;
+                const y = this.y * scale + canvas.height / 2;
+
+                // Skip if off screen
+                if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
+                    return;
+                }
+
+                // Draw star with trail
+                const radius = this.size * scale;
+
+                // Tail/trail effect
+                const prevZ = this.z + settings.speed * (trailLength / 10);
+                const prevScale = canvas.width / prevZ;
+                const prevX = this.x * prevScale + canvas.width / 2;
+                const prevY = this.y * prevScale + canvas.height / 2;
+
+                // Draw glow
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(0.5, this.color + '80');
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw trail line
+                ctx.strokeStyle = this.color + '60';
+                ctx.lineWidth = radius;
+                ctx.beginPath();
+                ctx.moveTo(prevX, prevY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+
+                // Draw core star
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Create stars
+        let stars = [];
+
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < settings.starCount; i++) {
+                stars.push(new Star(settings.starColor, settings.speed, settings.spawnRadius));
+            }
+        }
+
+        createStars();
+
+        // Animation loop
+        function animate() {
+            // Clear canvas with slight fade effect for motion blur
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and display stars
+            for (let star of stars) {
+                star.update(settings.speed);
+                star.display(settings.trailLength);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Slider event listeners
+        document.getElementById('trailSlider').addEventListener('input', (e) => {
+            settings.trailLength = parseInt(e.target.value);
+            document.getElementById('trailValue').textContent = e.target.value;
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            settings.speed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = e.target.value;
+        });
+
+        document.getElementById('countSlider').addEventListener('input', (e) => {
+            settings.starCount = parseInt(e.target.value);
+            document.getElementById('countValue').textContent = e.target.value;
+            createStars();
+        });
+
+        document.getElementById('spawnSlider').addEventListener('input', (e) => {
+            settings.spawnRadius = parseInt(e.target.value);
+            document.getElementById('spawnValue').textContent = e.target.value;
+            createStars();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
